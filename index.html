@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warteschlange</title>
+    <title>Benutzerregistrierung</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -24,22 +24,32 @@
     </div>
 
     <script>
-        const queue = JSON.parse(localStorage.getItem('queue')) || [];
-        
-        document.getElementById('nameForm').addEventListener('submit', function (e) {
+        document.getElementById("nameForm").addEventListener("submit", function (e) {
             e.preventDefault();
 
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
+            const firstName = document.getElementById("firstName").value;
+            const lastName = document.getElementById("lastName").value;
 
-            const user = { firstName, lastName, id: queue.length + 1, missed: 0 };
+            const newUser = {
+                firstName: firstName,
+                lastName: lastName,
+                id: new Date().getTime()
+            };
 
-            queue.push(user);
-            localStorage.setItem('queue', JSON.stringify(queue));
-
-            document.getElementById('message').innerText = `Willkommen, ${firstName} ${lastName}! Deine Nummer ist: ${user.id}`;
-            document.getElementById('firstName').value = '';
-            document.getElementById('lastName').value = '';
+            fetch("http://localhost:3000/queue", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(newUser)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("message").innerText = `Willkommen, ${firstName} ${lastName}! Deine Nummer ist: ${newUser.id}`;
+                })
+                .catch(error => {
+                    console.error("Fehler beim Hinzufügen des Benutzers:", error);
+                });
         });
     </script>
 </body>

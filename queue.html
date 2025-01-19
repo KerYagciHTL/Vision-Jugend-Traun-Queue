@@ -3,40 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warteschlange Übersicht</title>
+    <title>Warteschlange</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center">Warteschlange</h2>
-        <div id="queueList" class="mt-4">
-            <ul class="list-group" id="list">
-            </ul>
-        </div>
+        <h2 class="text-center">Aktuelle Warteschlange</h2>
+        <ul class="list-group mt-4" id="queueList"></ul>
     </div>
 
     <script>
-        const queue = JSON.parse(localStorage.getItem('queue')) || [];
-        
-        function renderQueue() {
-            const list = document.getElementById('list');
-            list.innerHTML = '';
+        function fetchQueue() {
+            fetch("http://localhost:3000/queue")
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById("queueList");
+                    list.innerHTML = "";
 
-            queue.forEach((person, index) => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('list-group-item');
-                if (index === 0) {
-                    listItem.classList.add('bg-success', 'text-white');
-                }
-                listItem.textContent = `${person.firstName} ${person.lastName} (Nummer: ${person.id})`;
-                list.appendChild(listItem);
-            });
+                    data.queue.forEach((user, index) => {
+                        const listItem = document.createElement("li");
+                        listItem.classList.add("list-group-item");
+                        listItem.textContent = `${user.firstName} ${user.lastName} (Nummer: ${user.id})`;
+                        if (index === 0) {
+                            listItem.classList.add("bg-success", "text-white");
+                        }
+                        list.appendChild(listItem);
+                    });
+                })
+                .catch(error => {
+                    console.error("Fehler beim Abrufen der Warteschlange:", error);
+                });
         }
 
-        setInterval(() => {
-            renderQueue();
-        }, 8000);
-
+        setInterval(fetchQueue, 10000);
+        fetchQueue();
     </script>
 </body>
 </html>
