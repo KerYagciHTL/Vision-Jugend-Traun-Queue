@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Warteschlange</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">Admin Warteschlange</h2>
+        
+        <div id="loginForm" class="mt-4">
+            <h4>Admin Login</h4>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="username">Benutzername:</label>
+                    <input type="text" id="username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Passwort:</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Anmelden</button>
+            </form>
+            <p id="loginMessage" class="text-center mt-3 text-danger"></p>
+        </div>
+        
+        <div id="adminInterface" class="mt-4" style="display: none;">
+            <h4>Warteschlange verwalten</h4>
+            <button class="btn btn-success" id="nextPersonBtn">Nächster bitte</button>
+            <div id="queueStatus" class="mt-4">
+                <h5>Aktuelle Warteschlange</h5>
+                <ul class="list-group" id="queueList">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const admins = [
+            { "username": "Fatih Yagci", "password": "pass123" },
+        ];
+
+        const queue = JSON.parse(localStorage.getItem('queue')) || [];
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const admin = admins.find(a => a.username === username && a.password === password);
+
+            if (admin) {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('adminInterface').style.display = 'block';
+                document.getElementById('loginMessage').innerText = '';
+                renderQueue();
+            } else {
+                document.getElementById('loginMessage').innerText = 'Falscher Benutzername oder Passwort!';
+            }
+        });
+
+        function renderQueue() {
+            const list = document.getElementById('queueList');
+            list.innerHTML = '';
+
+            queue.forEach((person, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item');
+                if (index === 0) {
+                    listItem.classList.add('bg-success', 'text-white');
+                }
+                listItem.textContent = `${person.firstName} ${person.lastName} (Nummer: ${person.id})`;
+                list.appendChild(listItem);
+            });
+        }
+
+        document.getElementById('nextPersonBtn').addEventListener('click', function() {
+            if (queue.length > 0) {
+                let currentPerson = queue[0];
+                currentPerson.missed = 0;
+                queue.shift();
+                queue.push(currentPerson);
+
+                queue.forEach((person, index) => {
+                    if (person.missed >= 2) {
+                        queue.splice(index, 1);
+                    }
+                });
+
+                localStorage.setItem('queue', JSON.stringify(queue));
+                renderQueue();
+            }
+        });
+
+        setInterval(() => {
+            renderQueue();
+        }, 1000);
+    </script>
+</body>
+</html>
