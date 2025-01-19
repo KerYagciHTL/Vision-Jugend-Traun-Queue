@@ -6,10 +6,11 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
+const filePath = "./queue.json";
+
 app.use(bodyParser.json());
 app.use(cors());
-
-const filePath = "./queue.json";
+app.use(express.static(__dirname));
 
 app.get("/queue", (req, res) => {
   fs.readFile(filePath, "utf8", (err, data) => {
@@ -29,7 +30,14 @@ app.post("/queue", (req, res) => {
     }
 
     const jsonData = JSON.parse(data);
+    let newId = jsonData.lastId + 1;
+    if (newId > 100) {
+      newId = 1;
+    }
+    newUser.id = newId;
+    
     jsonData.queue.push(newUser);
+    jsonData.lastId = newId;
 
     fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), "utf8", (err) => {
       if (err) {
@@ -51,7 +59,7 @@ app.post("/queue/next", (req, res) => {
       return res.status(400).json({ error: "Die Warteschlange ist leer" });
     }
 
-    const nextUser = jsonData.queue.shift();
+    const nextUser = jsonData.queue.shift(); 
 
     fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), "utf8", (err) => {
       if (err) {
@@ -62,29 +70,8 @@ app.post("/queue/next", (req, res) => {
   });
 });
 
-app.post("/queue.json", (req, res) => {
-  const { action } = req.body;
-
-  if (action === "next") {
-      const queue = JSON.parse(fs.readFileSync("queue.json", "utf8"));
-      if (queue.length > 0) {
-          queue.shift();
-          fs.writeFileSync("queue.json", JSON.stringify(queue, null, 2));
-          res.status(200).send({ success: true });
-      } else {
-          res.status(400).send({ success: false, message: "Keine Benutzer in der Warteschlange." });
-      }
-  } else {
-      res.status(400).send({ success: false, message: "Ungültige Aktion." });
-  }
-});
-
 app.listen(PORT, () => {
   console.log(`Server läuft unter http://localhost:${PORT}`);
+  console.log(`STRG + C um Server zu beenden...`);
+
 });
-
-app.use(express.static(__dirname));
-
-
-
-

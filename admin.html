@@ -5,102 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Warteschlange</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        #queueSection {
-            display: none;
-        }
-    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <div id="loginSection">
-            <h2 class="text-center">Admin Login</h2>
-            <form id="adminLoginForm" class="mt-4">
-                <div class="form-group">
-                    <label for="username">Benutzername:</label>
-                    <input type="text" id="username" class="form-control" placeholder="Benutzername eingeben" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Passwort:</label>
-                    <input type="password" id="password" class="form-control" placeholder="Passwort eingeben" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Einloggen</button>
-            </form>
-            <p id="loginMessage" class="text-center mt-3 text-danger"></p>
-        </div>
-
-        <div id="queueSection">
-            <h2 class="text-center">Warteschlange</h2>
-            <ul id="queueList" class="list-group mt-4"></ul>
-            <button id="nextButton" class="btn btn-success btn-block mt-3">Nächster</button>
-        </div>
+        <h2 class="text-center">Admin Warteschlange</h2>
+        <ul id="queueList" class="list-group mt-4"></ul>
+        <button id="nextButton" class="btn btn-success btn-block mt-3">Nächster</button>
+        <p id="message" class="text-center mt-3"></p>
     </div>
 
     <script>
-        const loginForm = document.getElementById("adminLoginForm");
-        const loginSection = document.getElementById("loginSection");
-        const queueSection = document.getElementById("queueSection");
         const queueList = document.getElementById("queueList");
         const nextButton = document.getElementById("nextButton");
-        const loginMessage = document.getElementById("loginMessage");
+        const message = document.getElementById("message");
 
-        loginForm.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            fetch("http://localhost:3000/admins.json")
-                .then(response => response.json())
-                .then(admins => {
-                    const validAdmin = admins.find(admin => admin.username === username && admin.password === password);
-
-                    if (validAdmin) {
-                        loginSection.style.display = "none";
-                        queueSection.style.display = "block";
-                        loadQueue();
-                    } else {
-                        loginMessage.innerText = "Ungültige Anmeldedaten. Bitte erneut versuchen.";
-                    }
-                })
-                .catch(error => {
-                    console.error("Fehler beim Abrufen der Admin-Daten:", error);
-                    loginMessage.innerText = "Fehler beim Server. Bitte später erneut versuchen.";
-                });
-        });
-
-        // Warteschlange laden
         function loadQueue() {
-            fetch("http://localhost:3000/queue.json")
+            fetch("http://localhost:3000/queue")
                 .then(response => response.json())
-                .then(queue => {
+                .then(data => {
                     queueList.innerHTML = "";
-                    queue.forEach((item, index) => {
+                    const queue = data.queue;
+
+                    if (queue.length === 0) {
+                        queueList.innerHTML = "<li class='list-group-item text-center'>Die Warteschlange ist leer</li>";
+                        return;
+                    }
+
+                    queue.forEach((user, index) => {
                         const listItem = document.createElement("li");
                         listItem.className = "list-group-item d-flex justify-content-between align-items-center";
-                        listItem.innerText = `${index + 1}. ${item.firstName} ${item.lastName}`;
+                        listItem.innerHTML = `<span>${index + 1}. ${user.firstName} ${user.lastName}</span>`;
                         queueList.appendChild(listItem);
                     });
                 })
-                .catch(error => console.error("Fehler beim Laden der Warteschlange:", error));
+                .catch(error => {
+                    console.error("Fehler beim Laden der Warteschlange:", error);
+                });
         }
 
-        nextButton.addEventListener("click", function () {
-            fetch("http://localhost:3000/queue.json", {
+        nextButton.addEventListener("click", () => {
+            fetch("http://localhost:3000/queue/next", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "next" })
+                headers: { "Content-Type": "application/json" }
             })
-                .then(response => {
-                    if (response.ok) {
-                        loadQueue();
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        message.innerText = data.error;
                     } else {
-                        console.error("Fehler beim Entfernen des nächsten Eintrags.");
+                        message.innerText = `Nächster Benutzer: ${data.user.firstName} ${data.user.lastName} entfernt.`;
+                        loadQueue();
                     }
                 })
-                .catch(error => console.error("Fehler beim Senden des Next-Befehls:", error));
+                .catch(error => {
+                    console.error("Fehler beim Entfernen des nächsten Benutzers:", error);
+                });
         });
 
         setInterval(loadQueue, 10000);
+        loadQueue();
     </script>
 </body>
 </html>
