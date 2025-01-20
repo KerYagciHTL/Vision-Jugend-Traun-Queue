@@ -11,7 +11,7 @@
         <h2 class="text-center">Admin Warteschlange</h2>
         <ul id="queueList" class="list-group mt-4"></ul>
         <button id="nextButton" class="btn btn-success btn-block mt-3">Nächster</button>
-        <p id="message" class="text-center mt-3"></p>
+        <p id="message" class="text-center text-primary mt-3"></p>
     </div>
 
     <script>
@@ -20,14 +20,20 @@
         const message = document.getElementById("message");
 
         function loadQueue() {
-            fetch("http://localhost:3000/queue")
-                .then(response => response.json())
+            fetch("http://185.128.246.66:3000/queue")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Fehler beim Abrufen der Warteschlange");
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     queueList.innerHTML = "";
                     const queue = data.queue;
 
                     if (queue.length === 0) {
                         queueList.innerHTML = "<li class='list-group-item text-center'>Die Warteschlange ist leer</li>";
+                        nextButton.disabled = true;
                         return;
                     }
 
@@ -37,28 +43,43 @@
                         listItem.innerHTML = `<span>${index + 1}. ${user.firstName} ${user.lastName}</span>`;
                         queueList.appendChild(listItem);
                     });
+
+                    nextButton.disabled = false;
                 })
                 .catch(error => {
                     console.error("Fehler beim Laden der Warteschlange:", error);
+                    queueList.innerHTML = "<li class='list-group-item text-danger text-center'>Fehler beim Laden der Warteschlange</li>";
                 });
         }
 
         nextButton.addEventListener("click", () => {
-            fetch("http://localhost:3000/queue/next", {
+            fetch("http://185.128.246.66:3000/queue/next", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Fehler beim Entfernen des nächsten Benutzers");
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.error) {
                         message.innerText = data.error;
+                        message.classList.remove("text-primary");
+                        message.classList.add("text-danger");
                     } else {
                         message.innerText = `Nächster Benutzer: ${data.user.firstName} ${data.user.lastName} entfernt.`;
+                        message.classList.remove("text-danger");
+                        message.classList.add("text-primary");
                         loadQueue();
                     }
                 })
                 .catch(error => {
                     console.error("Fehler beim Entfernen des nächsten Benutzers:", error);
+                    message.innerText = "Fehler beim Entfernen des Benutzers.";
+                    message.classList.remove("text-primary");
+                    message.classList.add("text-danger");
                 });
         });
 

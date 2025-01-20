@@ -14,7 +14,7 @@
 
     <script>
         function fetchQueue() {
-            fetch("http://localhost:3000/queue")
+            fetch("http://185.128.246.66:3000/queue")
                 .then(response => response.json())
                 .then(data => {
                     const list = document.getElementById("queueList");

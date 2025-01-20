@@ -41,7 +41,7 @@
                 lastName: lastName
             };
 
-            fetch("http://localhost:3000/queue", {
+            fetch("http://185.128.246.66:3000/queue", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -52,7 +52,11 @@
             .then(data => {
                 if (data.user) {
                     document.getElementById("nameForm").style.display = "none";
-                    document.getElementById("message").innerHTML = `Du wurdest erfolgreich angemeldet! <br> Deine Nummer ist: <span class="message">${data.user.id}</span>`;
+                    document.getElementById("message").innerHTML = `
+                        Du wurdest erfolgreich angemeldet! <br> 
+                        Deine Nummer ist: <span class="message">${data.user.id}</span><br>
+                        <a href="queue.html" class="btn btn-success mt-3">Zur Warteschlange</a>
+                    `;
                 } else {
                     document.getElementById("message").innerText = "Fehler beim Registrieren.";
                 }

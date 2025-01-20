@@ -70,8 +70,7 @@ app.post("/queue/next", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server läuft unter http://localhost:${PORT}`);
-  console.log(`STRG + C um Server zu beenden...`);
-
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server läuft unter http://185.128.246.66:${PORT}`);
 });
+
